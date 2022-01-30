@@ -41,7 +41,10 @@ class PrometheusReport:
     def _get_extra_labels() -> dict:
         labels = os.environ.get("PROMETHEUS_PUSHGATEWAY_EXTRA_LABEL")
         if labels:
-            return json.loads(labels.replace("'", '"'))
+            try:
+                return json.loads(labels.replace("'", '"'))
+            except:
+                return {}
         return {}
 
     @staticmethod

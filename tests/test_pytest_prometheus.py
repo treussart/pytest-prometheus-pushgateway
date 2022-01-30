@@ -3,8 +3,7 @@ from _pytest.pytester import RunResult
 
 
 def run(pytester, *args):
-    result = pytester.runpytest("--metrics", *args)
-    return result
+    return pytester.runpytest("--metrics", *args)
 
 
 class TestPrometheus:
