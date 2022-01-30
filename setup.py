@@ -30,7 +30,9 @@ setup(
     include_package_data=True,
     python_requires=">=3.7",
     install_requires=["prometheus_client", "pytest"],
-    entry_points={"pytest11": ["prometheus-pushgateway = pytest_prometheus_pushgateway.plugin"]},
+    entry_points={
+        "pytest11": ["prometheus-pushgateway = pytest_prometheus_pushgateway.plugin"]
+    },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Framework :: Pytest",
