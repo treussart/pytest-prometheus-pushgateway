@@ -3,6 +3,7 @@ import os
 import re
 from typing import Union
 
+import pytest
 from _pytest.config import Config, ExitCode
 from _pytest.main import Session
 from _pytest.reports import TestReport
@@ -93,6 +94,7 @@ class PrometheusReport:
             elif report.outcome == "errors":
                 self.errors.append(name)
 
+    @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session: Session, exitstatus: Union[int, ExitCode]):
         status = "succeeded"
         if exitstatus != 0:
@@ -163,6 +165,7 @@ class PrometheusReport:
                 self.pushgateway_url, registry=self.registry, job=self.job_name
             )
 
+    @pytest.hookimpl(trylast=True)
     def pytest_terminal_summary(
         self,
         terminalreporter: TerminalReporter,
