@@ -21,7 +21,7 @@ def pytest_addoption(parser: Parser):
 
 
 def pytest_configure(config: Config):
-    if config.getoption("--metrics"):
+    if config.getoption("--metrics") and not hasattr(config, "workerinput"):
         if not os.environ.get("PROMETHEUS_PUSHGATEWAY_URL") or not os.environ.get(
             "PROMETHEUS_PUSHGATEWAY_JOB"
         ):
