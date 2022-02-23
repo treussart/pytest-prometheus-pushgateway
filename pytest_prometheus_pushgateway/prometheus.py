@@ -98,8 +98,7 @@ class PrometheusReport:
             elif report.outcome == "errors":
                 self.errors.append(name)
 
-    @pytest.hookimpl(trylast=True)
-    def pytest_sessionfinish(self, session: Session, exitstatus: Union[int, ExitCode]):
+    def send_metrics(self, session: Session, exitstatus: Union[int, ExitCode]):
         status = "succeeded"
         if exitstatus != 0:
             status = "failed"
@@ -172,6 +171,15 @@ class PrometheusReport:
         except Exception as e:
             log.error(
                 f"push_to_gateway error: {self.pushgateway_url} - {e}"
+            )
+
+    @pytest.hookimpl(trylast=True)
+    def pytest_sessionfinish(self, session: Session, exitstatus: Union[int, ExitCode]):
+        try:
+            self.send_metrics(session, exitstatus)
+        except Exception as e:
+            log.error(
+                f"Prometheus send_metrics error: {self.pushgateway_url} - {e}"
             )
 
     @pytest.hookimpl(trylast=True)
