@@ -22,7 +22,7 @@ Basic Auth:
 Optional:
 
     PROMETHEUS_PUSHGATEWAY_METRIC_PREFIX=""
-    PROMETHEUS_PUSHGATEWAY_EXTRA_LABEL=""
+    PROMETHEUS_PUSHGATEWAY_EXTRA_LABEL="{'test':'value','test1':'value1'}"
 
 ## Add labels via hook
 
@@ -53,3 +53,12 @@ tag
 
     python -m build
     twine upload dist/*
+
+### Test
+
+Create endpoint on [requestbin](https://requestbin.com/)
+and add the url to PROMETHEUS_PUSHGATEWAY_URL to set_env fixture into conftest.py
+
+Use the runner in Pycharm.
+
+    pytest test_pytest_prometheus.py::TestPrometheus

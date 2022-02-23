@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from typing import Union
@@ -10,6 +11,9 @@ from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway, Info
 from prometheus_client.exposition import basic_auth_handler
+
+
+log = logging.getLogger(__name__)
 
 
 def my_auth_handler(url, method, timeout, headers, data):
@@ -153,16 +157,21 @@ class PrometheusReport:
         )
         self.add_metrics_for_tests(error_metric, self.errors)
 
-        if os.environ.get("PROMETHEUS_PUSHGATEWAY_BASIC_AUTH"):
-            push_to_gateway(
-                self.pushgateway_url,
-                registry=self.registry,
-                job=self.job_name,
-                handler=my_auth_handler,
-            )
-        else:
-            push_to_gateway(
-                self.pushgateway_url, registry=self.registry, job=self.job_name
+        try:
+            if os.environ.get("PROMETHEUS_PUSHGATEWAY_BASIC_AUTH"):
+                push_to_gateway(
+                    self.pushgateway_url,
+                    registry=self.registry,
+                    job=self.job_name,
+                    handler=my_auth_handler,
+                )
+            else:
+                push_to_gateway(
+                    self.pushgateway_url, registry=self.registry, job=self.job_name
+                )
+        except Exception as e:
+            log.error(
+                f"push_to_gateway error: {self.pushgateway_url} - {e}"
             )
 
     @pytest.hookimpl(trylast=True)
