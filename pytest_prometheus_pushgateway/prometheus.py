@@ -32,7 +32,6 @@ class PrometheusReport:
         self.registry = CollectorRegistry()
         self.passed = []
         self.failed = []
-        self.skipped = []
         self.errors = []
 
     @staticmethod
@@ -85,18 +84,17 @@ class PrometheusReport:
     def pytest_runtest_logreport(self, report: TestReport):
         # https://docs.pytest.org/en/latest/reference.html#_pytest.runner.TestReport.when
         # 'call' is the phase when the test is being ran
-        if report.when == "call":
-            funcname = report.location[2]
-            name = self._make_metric_name(funcname)
+        funcname = report.location[2]
+        name = self._make_metric_name(funcname)
+        print(report)
+        if (report.when == "setup" or report.when == "teardown") and report.outcome == "failed":
+            self.errors.append(name)
 
+        if report.when == "call":
             if report.outcome == "passed":
                 self.passed.append(name)
-            elif report.outcome == "skipped":
-                self.skipped.append(name)
             elif report.outcome == "failed":
                 self.failed.append(name)
-            elif report.outcome == "errors":
-                self.errors.append(name)
 
     def send_metrics(self, session: Session, exitstatus: Union[int, ExitCode]):
         status = "succeeded"
@@ -140,14 +138,6 @@ class PrometheusReport:
         )
         self.add_metrics_for_tests(failed_metric, self.failed)
 
-        skipped_metric = Gauge(
-            self._make_metric_name("skipped"),
-            "Number of skipped tests",
-            labelnames=self._get_label_names(),
-            registry=self.registry,
-        )
-        self.add_metrics_for_tests(skipped_metric, self.skipped)
-
         error_metric = Gauge(
             self._make_metric_name("error"),
             "Number of errors tests",
@@ -169,18 +159,14 @@ class PrometheusReport:
                     self.pushgateway_url, registry=self.registry, job=self.job_name
                 )
         except Exception as e:
-            log.error(
-                f"push_to_gateway error: {self.pushgateway_url} - {e}"
-            )
+            log.error(f"push_to_gateway error: {self.pushgateway_url} - {e}")
 
     @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session: Session, exitstatus: Union[int, ExitCode]):
         try:
             self.send_metrics(session, exitstatus)
         except Exception as e:
-            log.error(
-                f"Prometheus send_metrics error: {self.pushgateway_url} - {e}"
-            )
+            log.error(f"Prometheus send_metrics error: {self.pushgateway_url} - {e}")
 
     @pytest.hookimpl(trylast=True)
     def pytest_terminal_summary(

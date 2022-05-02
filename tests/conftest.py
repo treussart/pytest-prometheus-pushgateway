@@ -7,8 +7,8 @@ pytest_plugins = ["pytester"]
 
 @pytest.fixture
 def set_env():
-    os.environ["PROMETHEUS_PUSHGATEWAY_URL"] = "https://enm1n5rid50yi.x.pipedream.net/"
-    os.environ["PROMETHEUS_PUSHGATEWAY_JOB"] = "job"
+    os.environ["PROMETHEUS_PUSHGATEWAY_URL"] = "https://en2w8i9i90lx2.x.pipedream.net"
+    os.environ["PROMETHEUS_PUSHGATEWAY_JOB"] = "job_test"
     yield
     del os.environ["PROMETHEUS_PUSHGATEWAY_URL"]
     del os.environ["PROMETHEUS_PUSHGATEWAY_JOB"]
