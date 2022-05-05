@@ -86,7 +86,6 @@ class PrometheusReport:
         # 'call' is the phase when the test is being ran
         funcname = report.location[2]
         name = self._make_metric_name(funcname)
-        print(report)
         if (report.when == "setup" or report.when == "teardown") and report.outcome == "failed":
             self.errors.append(name)
 
