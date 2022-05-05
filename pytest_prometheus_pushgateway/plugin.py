@@ -3,7 +3,7 @@ import os
 from _pytest.config import Config, PytestPluginManager
 from _pytest.config.argparsing import Parser
 
-from pytest_prometheus_pushgateway.prometheus import PrometheusReport
+from pytest_prometheus_pushgateway.prometheus import PrometheusReport, get_auth
 
 
 def pytest_addhooks(pluginmanager: PytestPluginManager):
@@ -28,12 +28,12 @@ def pytest_configure(config: Config):
             raise Exception(
                 "You must set the environment variables for Prometheus PushGateway plugin"
             )
-        if os.environ.get("PROMETHEUS_PUSHGATEWAY_BASIC_AUTH") and (
+        if get_auth() and (
             not os.environ.get("PROMETHEUS_PUSHGATEWAY_USERNAME")
             or not os.environ.get("PROMETHEUS_PUSHGATEWAY_PASSWORD")
         ):
             raise Exception(
-                "You must set the environment variables for Prometheus PushGateway plugin"
+                "You must set the auth environment variables for Prometheus PushGateway plugin"
             )
         config._prometheus = PrometheusReport(config)
         config.pluginmanager.register(config._prometheus)

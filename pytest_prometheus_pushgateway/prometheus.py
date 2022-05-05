@@ -16,9 +16,16 @@ from prometheus_client.exposition import basic_auth_handler
 log = logging.getLogger(__name__)
 
 
+def get_auth() -> bool:
+    auth = os.getenv("PROMETHEUS_PUSHGATEWAY_BASIC_AUTH", "False")
+    if auth == "False" or auth == "false":
+        return False
+    return True
+
+
 def my_auth_handler(url, method, timeout, headers, data):
-    username = os.environ.get("PROMETHEUS_PUSHGATEWAY_USERNAME")
-    password = os.environ.get("PROMETHEUS_PUSHGATEWAY_PASSWORD")
+    username = os.getenv("PROMETHEUS_PUSHGATEWAY_USERNAME", "admin")
+    password = os.getenv("PROMETHEUS_PUSHGATEWAY_PASSWORD", "")
     return basic_auth_handler(url, method, timeout, headers, data, username, password)
 
 
@@ -33,6 +40,7 @@ class PrometheusReport:
         self.passed = []
         self.failed = []
         self.errors = []
+        self.auth = get_auth()
 
     @staticmethod
     def _get_prefix() -> str:
@@ -146,7 +154,7 @@ class PrometheusReport:
         self.add_metrics_for_tests(error_metric, self.errors)
 
         try:
-            if os.environ.get("PROMETHEUS_PUSHGATEWAY_BASIC_AUTH"):
+            if self.auth:
                 push_to_gateway(
                     self.pushgateway_url,
                     registry=self.registry,
