@@ -123,7 +123,7 @@ class PrometheusReport:
         else:
             labels = default_labels
         i = Info(
-            os.environ.get("PROMETHEUS_PUSHGATEWAY_JOB"),
+            self.job_name,
             "Info test",
             registry=self.registry,
         )
