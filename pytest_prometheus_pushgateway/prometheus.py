@@ -68,6 +68,17 @@ class PrometheusReport:
             f"Skipped={len(stats.get('skipped', []))} Error={len(stats.get('error', []))}"
         )
 
+    @staticmethod
+    def _get_status(
+        stats: dict,
+    ) -> str:
+        if len(stats.get('failed', [])) > 0:
+            return "failed"
+        elif len(stats.get('error', [])) > 0:
+            return "errored"
+        else:
+            return "succeeded"
+
     def _make_metric_name(self, name: str) -> str:
         unsanitized_name = "{prefix}{name}".format(prefix=self.prefix, name=name)
         # Valid names can only contain these characters, replace all others with _
@@ -104,14 +115,11 @@ class PrometheusReport:
                 self.failed.append(name)
 
     def send_metrics(self, session: Session, exitstatus: Union[int, ExitCode]):
-        status = "succeeded"
-        if exitstatus != 0:
-            status = "failed"
         reporter: TerminalReporter = session.config.pluginmanager.get_plugin(
             "terminalreporter"
         )
         default_labels = {
-            "status": status,
+            "status": self._get_status(reporter.stats),
             "detail": self._format_detail(reporter.stats),
         }
         default_labels.update(self.extra_labels)
