@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 from typing import Union
 
 import pytest
@@ -41,6 +42,7 @@ class PrometheusReport:
         self.failed = []
         self.errors = []
         self.auth = get_auth()
+        self.last_time = datetime.now()
 
     @staticmethod
     def _get_prefix() -> str:
@@ -160,6 +162,33 @@ class PrometheusReport:
             registry=self.registry,
         )
         self.add_metrics_for_tests(error_metric, self.errors)
+
+        last_run_gauge = Gauge(
+            self._make_metric_name("last_run_timestamp_seconds"),
+            "The Unix timestamp in seconds since the last test job run.",
+            labelnames=self._get_label_names(),
+            registry=self.registry,
+        )
+        last_run_gauge.labels(**self.extra_labels.copy()).set_to_current_time()
+
+        last_success_gauge = Gauge(
+            self._make_metric_name("last_success_timestamp_seconds"),
+            "The Unix timestamp in seconds since the last successful test job completion.",
+            labelnames=self._get_label_names(),
+            registry=self.registry,
+        )
+        if exitstatus == 0:
+            last_success_gauge.labels( ** self.extra_labels.copy()).set_to_current_time()
+
+        last_duration_gauge = Gauge(
+            self._make_metric_name("last_run_duration_seconds"),
+            "The duration in seconds of the last test job run.",
+            labelnames=self._get_label_names(),
+            registry=self.registry,
+        )
+        last_duration_gauge.labels(**self.extra_labels.copy()).set(
+            (datetime.now() - self.last_time).total_seconds()
+        )
 
         try:
             if self.auth:
